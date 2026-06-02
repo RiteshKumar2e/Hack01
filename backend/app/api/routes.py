@@ -8,6 +8,7 @@ from ..schemas import (
     Candidate, Education, ExperienceEntry, BehavioralSignals, JobDescription,
     CandidateInput
 )
+from ..db import save_candidate, clear_all_candidates, get_all_candidates
 
 router = APIRouter(prefix="/api", tags=["ranking"])
 
@@ -99,6 +100,8 @@ async def rank_candidates(request: SearchRequest):
 @router.get("/candidates")
 async def list_candidates(skip: int = 0, limit: int = 50):
     """List all candidates with pagination."""
+    global _candidates
+    _candidates = get_all_candidates()
     if not _candidates:
         return {"candidates": [], "total": 0}
 
@@ -115,6 +118,8 @@ async def list_candidates(skip: int = 0, limit: int = 50):
 @router.get("/candidates/{candidate_id}")
 async def get_candidate(candidate_id: str):
     """Get a single candidate by ID."""
+    global _candidates
+    _candidates = get_all_candidates()
     if not _candidates:
         raise HTTPException(status_code=404, detail="No candidates loaded")
 
@@ -136,8 +141,6 @@ async def get_sample_jobs():
 @router.post("/candidates", response_model=Candidate)
 async def add_candidate(cand_input: CandidateInput):
     """Add a new candidate to the pool and re-index."""
-    import os
-    import json
     import datetime
     
     global _candidates
@@ -177,17 +180,11 @@ async def add_candidate(cand_input: CandidateInput):
         "behavioral_signals": default_signals
     }
     
-    _candidates.append(new_cand)
+    # Persist to Turso Database
+    save_candidate(new_cand)
     
-    # Persist to disk
-    try:
-        data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
-        candidates_path = os.path.join(data_dir, 'candidates.json')
-        os.makedirs(data_dir, exist_ok=True)
-        with open(candidates_path, 'w') as f:
-            json.dump(_candidates, f, indent=2)
-    except Exception as e:
-        pass
+    # Reload candidates to keep in-memory list synchronized
+    _candidates = get_all_candidates()
         
     # Re-initialize ML pipeline
     if _pipeline:
@@ -202,21 +199,12 @@ async def add_candidate(cand_input: CandidateInput):
 @router.post("/candidates/clear")
 async def clear_candidates():
     """Clear all candidates from the pool and re-index."""
-    import os
-    import json
-    
     global _candidates
-    _candidates = []
     
-    # Persist empty array to disk
-    try:
-        data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
-        candidates_path = os.path.join(data_dir, 'candidates.json')
-        os.makedirs(data_dir, exist_ok=True)
-        with open(candidates_path, 'w') as f:
-            json.dump([], f, indent=2)
-    except Exception as e:
-        pass
+    # Clear Turso Database
+    clear_all_candidates()
+    
+    _candidates = []
         
     # Re-initialize ML pipeline with 0 candidates
     if _pipeline:

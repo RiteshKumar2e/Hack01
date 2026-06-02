@@ -1,10 +1,11 @@
-"""
-Intelligent Candidate Discovery — FastAPI Application
-Main entry point that initializes the ML pipeline and serves the API.
-"""
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+load_dotenv(dotenv_path=env_path)
 
 import json
-import os
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -13,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api.routes import router, set_pipeline
 from .ml.pipeline import RankingPipeline
 from .data.generate_data import generate_candidates, generate_sample_jobs
+from .db import init_db, get_all_candidates, save_candidate, get_all_sample_jobs, save_sample_job
 
 # Configure logging
 logging.basicConfig(
@@ -28,36 +30,33 @@ sample_jobs_data = []
 
 
 def load_or_generate_data():
-    """Load candidate data from JSON or generate if not found."""
+    """Load candidate data from Turso/libSQL or generate and seed if empty."""
     global candidates_data, sample_jobs_data
 
-    data_dir = os.path.join(os.path.dirname(__file__), 'data')
-    candidates_path = os.path.join(data_dir, 'candidates.json')
-    jobs_path = os.path.join(data_dir, 'sample_jobs.json')
+    # Initialize the database schema
+    init_db()
 
-    # Load or generate candidates
-    if os.path.exists(candidates_path):
-        logger.info(f"Loading candidates from {candidates_path}")
-        with open(candidates_path, 'r') as f:
-            candidates_data = json.load(f)
-    else:
-        logger.info("Generating synthetic candidates...")
+    # Load candidates from database
+    candidates_data = get_all_candidates()
+    if not candidates_data:
+        logger.info("No candidates found in Turso database. Generating and seeding synthetic candidates...")
         candidates_data = generate_candidates()
-        os.makedirs(data_dir, exist_ok=True)
-        with open(candidates_path, 'w') as f:
-            json.dump(candidates_data, f, indent=2)
-        logger.info(f"Saved {len(candidates_data)} candidates to {candidates_path}")
-
-    # Load or generate sample jobs
-    if os.path.exists(jobs_path):
-        with open(jobs_path, 'r') as f:
-            sample_jobs_data = json.load(f)
+        for cand in candidates_data:
+            save_candidate(cand)
+        logger.info(f"Seeded {len(candidates_data)} candidates to database.")
     else:
-        sample_jobs_data = generate_sample_jobs()
-        with open(jobs_path, 'w') as f:
-            json.dump(sample_jobs_data, f, indent=2)
+        logger.info(f"Loaded {len(candidates_data)} candidates from Turso database.")
 
-    logger.info(f"Loaded {len(candidates_data)} candidates and {len(sample_jobs_data)} sample jobs")
+    # Load sample jobs from database
+    sample_jobs_data = get_all_sample_jobs()
+    if not sample_jobs_data:
+        logger.info("No sample jobs found in Turso database. Seeding...")
+        sample_jobs_data = generate_sample_jobs()
+        for job in sample_jobs_data:
+            save_sample_job(job)
+        logger.info(f"Seeded {len(sample_jobs_data)} sample jobs to database.")
+    else:
+        logger.info(f"Loaded {len(sample_jobs_data)} sample jobs from Turso database.")
 
 
 @asynccontextmanager
