@@ -147,23 +147,47 @@ async def add_candidate(cand_input: CandidateInput):
     if _candidates is None:
         _candidates = []
         
-    # Generate unique ID
-    new_id = f"CAND-{(len(_candidates) + 1):04d}"
-    
-    # Generate default behavioral signals
+    # Check if a candidate with the same name already exists to avoid duplication
+    existing_cand = None
+    if _candidates:
+        for cand in _candidates:
+            if cand.get('name', '').strip().lower() == cand_input.name.strip().lower():
+                existing_cand = cand
+                break
+
     now_str = datetime.datetime.now().isoformat()
-    default_signals = {
-        "last_active": now_str,
-        "days_since_active": 0,
-        "publications": 0,
-        "github_contributions": 50,
-        "profile_completeness": 1.0,
-        "has_portfolio": True,
-        "has_recommendations": True,
-        "promotions": 0,
-        "avg_tenure_years": float(cand_input.years_of_experience),
-        "open_to_work": True
-    }
+
+    if existing_cand:
+        new_id = existing_cand['id']
+        # Reuse existing behavioral signals if they exist
+        default_signals = existing_cand.get('behavioral_signals', {
+            "last_active": now_str,
+            "days_since_active": 0,
+            "publications": 0,
+            "github_contributions": 50,
+            "profile_completeness": 1.0,
+            "has_portfolio": True,
+            "has_recommendations": True,
+            "promotions": 0,
+            "avg_tenure_years": float(cand_input.years_of_experience),
+            "open_to_work": True
+        })
+        default_signals["last_active"] = now_str
+        default_signals["days_since_active"] = 0
+    else:
+        new_id = f"CAND-{(len(_candidates) + 1):04d}"
+        default_signals = {
+            "last_active": now_str,
+            "days_since_active": 0,
+            "publications": 0,
+            "github_contributions": 50,
+            "profile_completeness": 1.0,
+            "has_portfolio": True,
+            "has_recommendations": True,
+            "promotions": 0,
+            "avg_tenure_years": float(cand_input.years_of_experience),
+            "open_to_work": True
+        }
     
     new_cand = {
         "id": new_id,

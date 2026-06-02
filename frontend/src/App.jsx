@@ -9,7 +9,7 @@ import { rankCandidates, fetchCandidateDetails, fetchCandidates } from './servic
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
-import CandidateForm from './components/CandidateForm';
+import CandidateDashboard from './components/CandidateDashboard';
 import './styles/AtsBoard.css';
 
 const DEFAULT_CANDIDATES = [];
@@ -341,7 +341,7 @@ export default function App() {
   }
 
   if (view === 'candidate-form') {
-    return <CandidateForm user={user} onLogout={handleLogout} />;
+    return <CandidateDashboard user={user} onLogout={handleLogout} />;
   }
 
   // default to 'discover' (Recruiter Dashboard)

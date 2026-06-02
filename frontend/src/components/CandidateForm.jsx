@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { addCandidate } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { addCandidate, fetchCandidates } from '../services/api';
 import '../styles/CandidateForm.css';
 
 const CAREER_PATHS = [
@@ -20,6 +20,7 @@ const CAREER_PATHS = [
 export default function CandidateForm({ user, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [successData, setSuccessData] = useState(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [error, setError] = useState('');
 
   // Main Candidate States
@@ -47,6 +48,66 @@ export default function CandidateForm({ user, onLogout }) {
   const [expTitle, setExpTitle] = useState('');
   const [expDuration, setExpDuration] = useState('');
   const [expSkills, setExpSkills] = useState('');
+
+  // Fetch existing candidate details on load
+  useEffect(() => {
+    if (!user?.name) return;
+    
+    async function loadExistingProfile() {
+      try {
+        const data = await fetchCandidates(0, 100);
+        if (data.candidates && data.candidates.length > 0) {
+          // Find a candidate with a matching name (case-insensitive)
+          const matched = data.candidates.find(
+            cand => cand.name.trim().toLowerCase() === user.name.trim().toLowerCase()
+          );
+          
+          if (matched) {
+            setTitle(matched.title || '');
+            
+            // Check if career path matches predefined values or is custom
+            const predefinedPaths = ['ml_engineer', 'data_scientist', 'frontend_engineer', 'backend_engineer', 'fullstack_engineer', 'devops_engineer', 'data_engineer', 'security_engineer', 'product_manager', 'ux_designer'];
+            if (predefinedPaths.includes(matched.career_path)) {
+              setCareerPath(matched.career_path);
+            } else {
+              setCareerPath('other');
+              setCustomCareerPath(matched.career_path || '');
+            }
+            
+            setLocation(matched.location || '');
+            setSummary(matched.summary || '');
+            setYearsOfExp(matched.years_of_experience?.toString() || '');
+            
+            // Education details
+            if (matched.education) {
+              const predefinedDegrees = ['High School', 'Associate', "Bachelor's", "Master's", 'MBA', 'PhD'];
+              const level = matched.education.level;
+              if (predefinedDegrees.includes(level)) {
+                setEduLevel(level);
+              } else {
+                setEduLevel('other');
+                setCustomEduLevel(level || '');
+              }
+              setEduUniv(matched.education.university || '');
+              setEduField(matched.education.field || '');
+            }
+            
+            // Skills & Certs
+            setSkills(matched.skills ? matched.skills.join(', ') : '');
+            setCerts(matched.certifications ? matched.certifications.join(', ') : '');
+            
+            // Work History
+            setWorkHistory(matched.experience || []);
+            setProfileLoaded(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading existing profile:", err);
+      }
+    }
+    
+    loadExistingProfile();
+  }, [user]);
 
   const handleAddExperience = () => {
     if (!expCompany || !expTitle || !expDuration) {
@@ -173,6 +234,12 @@ export default function CandidateForm({ user, onLogout }) {
           <p className="form-subtitle">
             Fill out your professional credentials below. Your details will be processed through our NLP parser and indexed for recruiters.
           </p>
+
+          {profileLoaded && (
+            <div className="profile-loaded-banner animate-fade-in">
+              ✨ We loaded your existing profile from the database. You can review or edit it below.
+            </div>
+          )}
 
           {error && <div className="form-error-box">{error}</div>}
 
