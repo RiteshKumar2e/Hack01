@@ -1,0 +1,162 @@
+.register-container {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary);
+  padding: 2rem 1rem;
+}
+
+.register-back-button {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.45rem 0.85rem;
+  background-color: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-smooth);
+  font-family: inherit;
+}
+
+.register-back-button:hover {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.register-logo-link {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  margin-top: 2rem;
+  transition: var(--transition-smooth);
+}
+
+.register-logo-link:hover {
+  opacity: 0.85;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 430px;
+  padding: 2.5rem 2rem;
+  background-color: #ffffff;
+  box-shadow: var(--shadow-lg);
+}
+
+.register-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.register-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.register-error-box {
+  padding: 0.75rem 1rem;
+  background-color: var(--color-danger-bg);
+  border: 1px solid #f0b3b3;
+  color: var(--color-danger);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  margin-bottom: 1.25rem;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.register-role-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.register-role-tab {
+  padding: 0.45rem 0.25rem;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  transition: var(--transition-smooth);
+  text-align: center;
+}
+
+.register-role-tab.active {
+  background-color: #ffffff;
+  color: var(--accent-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.register-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.register-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.register-submit-btn {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.register-card-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  border-top: 1px solid var(--border-light);
+  padding-top: 1rem;
+}
+
+.register-footer-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.register-link {
+  color: var(--accent-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.register-link:hover {
+  text-decoration: underline;
+  color: var(--accent-dark);
+}
