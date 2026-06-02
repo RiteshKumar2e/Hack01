@@ -193,3 +193,20 @@ def save_sample_job(job_dict):
     except Exception as e:
         logger.error(f"Error saving sample job {job_dict.get('id')} to database: {str(e)}")
         return False
+
+
+def clear_all_sample_jobs():
+    """Delete all sample job records from the database."""
+    try:
+        conn = get_db_connection()
+        conn.execute("DELETE FROM sample_jobs")
+        
+        if hasattr(conn, "commit"):
+            conn.commit()
+            
+        logger.info("Cleared all sample jobs from database.")
+        return True
+    except Exception as e:
+        logger.error(f"Error clearing sample jobs from database: {str(e)}")
+        return False
+

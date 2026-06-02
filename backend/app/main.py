@@ -47,11 +47,8 @@ def load_or_generate_data():
     # Load sample jobs from database
     sample_jobs_data = get_all_sample_jobs()
     if not sample_jobs_data:
-        logger.info("No sample jobs found in Turso database. Seeding...")
-        sample_jobs_data = generate_sample_jobs()
-        for job in sample_jobs_data:
-            save_sample_job(job)
-        logger.info(f"Seeded {len(sample_jobs_data)} sample jobs to database.")
+        logger.info("No sample jobs found in Turso database.")
+        sample_jobs_data = []
     else:
         logger.info(f"Loaded {len(sample_jobs_data)} sample jobs from Turso database.")
 
