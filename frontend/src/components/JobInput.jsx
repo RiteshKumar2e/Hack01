@@ -1,13 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { fetchSampleJobs } from '../services/api';
-
-const DEFAULT_SAMPLE_JOBS = [];
-
+import React, { useState } from 'react';
 
 export default function JobInput({ onSearch, loading }) {
-  const [sampleJobs, setSampleJobs] = useState(DEFAULT_SAMPLE_JOBS);
-  const [selectedJobId, setSelectedJobId] = useState('');
-  
   const [jobTitle, setJobTitle] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [preferredSkills, setPreferredSkills] = useState('');
@@ -17,41 +10,10 @@ export default function JobInput({ onSearch, loading }) {
   const [location, setLocation] = useState('');
   const [topK, setTopK] = useState(15);
 
-  useEffect(() => {
-    async function loadSamples() {
-      try {
-        const jobs = await fetchSampleJobs();
-        if (jobs && jobs.length > 0) {
-          setSampleJobs(jobs);
-        }
-      } catch (err) {
-        console.error("Error loading sample jobs from API, using defaults:", err);
-      }
-    }
-    loadSamples();
-  }, []);
-
-  const handleSampleChange = (e) => {
-    const id = e.target.value;
-    setSelectedJobId(id);
-    if (!id) return;
-    
-    const selected = sampleJobs.find(j => j.id === id);
-    if (selected) {
-      setJobTitle(selected.title || '');
-      setJobDescription(selected.description || '');
-      setPreferredSkills(selected.preferred_skills ? selected.preferred_skills.join(', ') : '');
-      setExperienceMin(selected.required_experience_min || '');
-      setExperienceMax(selected.required_experience_max || '');
-      setEducation(selected.required_education || "Bachelor's");
-      setLocation(selected.location || '');
-    }
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!selectedJobId && !preferredSkills.trim() && !experienceMin && !experienceMax && !location.trim()) {
-      alert("Please select a job template or enter at least one search criterion (skills, experience, or location).");
+    if (!jobDescription.trim() && !preferredSkills.trim() && !experienceMin && !experienceMax && !location.trim()) {
+      alert("Please enter at least one search criterion (job description, skills, experience, or location).");
       return;
     }
     
@@ -74,29 +36,32 @@ export default function JobInput({ onSearch, loading }) {
   return (
     <div className="glass-panel" style={styles.container}>
       <h3 style={styles.title}>Job Details</h3>
-      <p style={styles.subtitle}>Enter job details or select a pre-configured template below.</p>
+      <p style={styles.subtitle}>Enter job details below to discover matching candidates.</p>
       
       <form onSubmit={handleSubmit} style={styles.form}>
-        {/* Template selector */}
+        {/* Job Title */}
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Job Template</label>
-          <select 
-            className="text-input" 
-            value={selectedJobId} 
-            onChange={handleSampleChange}
-            style={styles.select}
-          >
-            <option value="">-- Choose a template --</option>
-            {sampleJobs.map(job => {
-              const label = job.title || '';
-              const displayLabel = label.length > 35 ? label.substring(0, 32) + '...' : label;
-              return (
-                <option key={job.id} value={job.id}>
-                  {displayLabel}
-                </option>
-              );
-            })}
-          </select>
+          <label style={styles.label}>Job Title</label>
+          <input
+            type="text"
+            className="text-input"
+            placeholder="e.g. Senior Machine Learning Engineer"
+            value={jobTitle}
+            onChange={(e) => setJobTitle(e.target.value)}
+          />
+        </div>
+
+        {/* Job Description */}
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Job Description</label>
+          <textarea
+            className="text-input"
+            rows="4"
+            placeholder="Describe the job responsibilities, requirements, and scope..."
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            style={styles.textarea}
+          />
         </div>
 
         {/* Preferred Skills */}
