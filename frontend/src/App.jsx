@@ -10,6 +10,7 @@ import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import CandidateForm from './components/CandidateForm';
+import './styles/AtsBoard.css';
 
 const DEFAULT_CANDIDATES = [];
 
@@ -33,6 +34,12 @@ export default function App() {
 
   const [initialCandidates, setInitialCandidates] = useState([]);
 
+  // ATS Column Stage State - persisted in localStorage
+  const [candidateStages, setCandidateStages] = useState(() => {
+    const saved = localStorage.getItem('talentflow_stages');
+    return saved ? JSON.parse(saved) : {};
+  });
+
   // Check user session on load
   useEffect(() => {
     const savedUser = localStorage.getItem('talentflow_user');
@@ -47,25 +54,53 @@ export default function App() {
     }
   }, []);
 
-  // Fetch initial candidates when Recruiter views discover dashboard
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const data = await fetchCandidates(0, 100);
+      if (data.candidates) {
+        setInitialCandidates(data.candidates);
+      }
+    } catch (err) {
+      console.error("Error syncing candidates:", err);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Fetch initial candidates when Recruiter views discover dashboard, and poll for updates
   useEffect(() => {
     if (view !== 'discover') return;
     
     async function loadInitial() {
       try {
-        const data = await fetchCandidates(0, 10);
-        if (data.candidates && data.candidates.length > 0) {
+        const data = await fetchCandidates(0, 100);
+        if (data.candidates) {
           setInitialCandidates(data.candidates);
-        } else {
-          setInitialCandidates([]);
         }
       } catch (err) {
         console.error("Error fetching initial candidates:", err);
-        setInitialCandidates([]);
       }
     }
+    
     loadInitial();
+    const interval = setInterval(loadInitial, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
   }, [view]);
+
+  // Persist candidate stages
+  useEffect(() => {
+    localStorage.setItem('talentflow_stages', JSON.stringify(candidateStages));
+  }, [candidateStages]);
+
+  const moveCandidate = (id, targetStage) => {
+    setCandidateStages(prev => ({
+      ...prev,
+      [id]: targetStage
+    }));
+  };
 
   const handleLogin = (loggedInUser) => {
     setUser(loggedInUser);
@@ -125,6 +160,161 @@ export default function App() {
     setSelectedCandidateId(null);
   };
 
+  // Get unique list of candidates to display in the board
+  const getBoardCandidates = () => {
+    const map = new Map();
+    
+    // Add initial candidates first
+    initialCandidates.forEach(cand => {
+      map.set(cand.id, {
+        candidate: cand,
+        match_score: null,
+        score_breakdown: null,
+        match_reasons: []
+      });
+    });
+    
+    // Override/add with search result candidates (which have scores)
+    rankedList.forEach(item => {
+      map.set(item.candidate.id, {
+        candidate: item.candidate,
+        match_score: item.match_score,
+        score_breakdown: item.score_breakdown,
+        match_reasons: item.match_reasons
+      });
+    });
+    
+    return Array.from(map.values());
+  };
+
+  // Sort helper to rank matching candidates by match score
+  const sortCandidates = (list) => {
+    return [...list].sort((a, b) => {
+      const scoreA = a.match_score !== null ? a.match_score : -1;
+      const scoreB = b.match_score !== null ? b.match_score : -1;
+      return scoreB - scoreA;
+    });
+  };
+
+  const allCandidates = getBoardCandidates();
+
+  const discovered = allCandidates.filter(item => {
+    const stage = candidateStages[item.candidate.id] || 'discovered';
+    return stage === 'discovered';
+  });
+
+  const shortlisted = allCandidates.filter(item => {
+    const stage = candidateStages[item.candidate.id];
+    return stage === 'shortlisted';
+  });
+
+  const interviewing = allCandidates.filter(item => {
+    const stage = candidateStages[item.candidate.id];
+    return stage === 'interviewing';
+  });
+
+  const hired = allCandidates.filter(item => {
+    const stage = candidateStages[item.candidate.id];
+    return stage === 'hired';
+  });
+
+  // Render a single ATS Card
+  const renderATSCard = (item) => {
+    const cand = item.candidate;
+    const score = item.match_score !== null ? Math.round(item.match_score) : null;
+    const stage = candidateStages[cand.id] || 'discovered';
+    
+    return (
+      <div key={cand.id} className="ats-candidate-card animate-fade-in">
+        <div className="ats-candidate-header">
+          <h4 className="ats-candidate-name" onClick={() => handleSelectCandidate(cand.id)}>
+            {cand.name}
+          </h4>
+          {score !== null && (
+            <span className="ats-candidate-score">
+              {score}% Match
+            </span>
+          )}
+        </div>
+        <p className="ats-candidate-title">{cand.title}</p>
+        
+        {cand.skills && cand.skills.length > 0 && (
+          <div className="ats-candidate-skills">
+            {cand.skills.slice(0, 3).map((skill, idx) => (
+              <span key={idx} className="ats-skill-badge">{skill}</span>
+            ))}
+          </div>
+        )}
+        
+        <div className="ats-candidate-actions">
+          {stage === 'discovered' && (
+            <button 
+              onClick={() => moveCandidate(cand.id, 'shortlisted')} 
+              className="ats-action-btn"
+            >
+              Shortlist →
+            </button>
+          )}
+          
+          {stage === 'shortlisted' && (
+            <>
+              <button 
+                onClick={() => moveCandidate(cand.id, 'discovered')} 
+                className="ats-action-btn reject"
+              >
+                ← Reject
+              </button>
+              <button 
+                onClick={() => moveCandidate(cand.id, 'interviewing')} 
+                className="ats-action-btn"
+              >
+                Interview →
+              </button>
+            </>
+          )}
+          
+          {stage === 'interviewing' && (
+            <>
+              <button 
+                onClick={() => moveCandidate(cand.id, 'shortlisted')} 
+                className="ats-action-btn reject"
+              >
+                ← Back
+              </button>
+              <button 
+                onClick={() => moveCandidate(cand.id, 'hired')} 
+                className="ats-action-btn"
+              >
+                🎉 Hire →
+              </button>
+            </>
+          )}
+          
+          {stage === 'hired' && (
+            <>
+              <span className="ats-hired-badge">
+                ✓ Hired
+              </span>
+              <button 
+                onClick={() => moveCandidate(cand.id, 'interviewing')} 
+                className="ats-action-btn reject"
+                style={{ fontSize: '0.65rem' }}
+              >
+                Reset
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderEmptyColumn = (message) => (
+    <div className="ats-empty-placeholder">
+      {message}
+    </div>
+  );
+
   // --- CONDITIONAL VIEW RENDERING ---
   if (view === 'landing') {
     return <LandingPage onNavigate={handleNavigate} />;
@@ -182,11 +372,17 @@ export default function App() {
 
           {/* Candidates List Header */}
           <div style={styles.listHeader}>
-            <h3 style={styles.listTitle}>
-              {rankedList.length > 0 
-                ? `Discovered Candidates (${rankedList.length})` 
-                : 'Candidate Pool Overview'}
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <h3 style={styles.listTitle}>ATS Hiring Pipeline</h3>
+              <button 
+                onClick={handleSync} 
+                className="btn btn-secondary" 
+                style={{ padding: '0.25rem 0.6rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.25rem', height: 'fit-content' }}
+                disabled={syncing}
+              >
+                {syncing ? '🔄 Syncing...' : '🔄 Sync'}
+              </button>
+            </div>
             {rankedList.length === 0 && initialCandidates.length > 0 && (
               <span style={styles.poolHint}>Displaying candidates from database</span>
             )}
@@ -199,38 +395,67 @@ export default function App() {
                 <div className="spinner" style={styles.largeSpinner}></div>
                 <p style={styles.loaderText}>Processing job semantics and cross-matching profiles...</p>
               </div>
-            ) : rankedList.length > 0 ? (
-              rankedList.map((item) => (
-                <CandidateCard 
-                  key={item.candidate.id} 
-                  item={item} 
-                  onSelect={handleSelectCandidate} 
-                />
-              ))
-            ) : initialCandidates.length > 0 ? (
-              // Display simple profiles before first search runs
-              initialCandidates.map((cand, idx) => (
-                <div key={cand.id} className="glass-panel animate-fade-in" style={styles.simpleCard}>
-                  <div style={styles.simpleHeader}>
-                    <div>
-                      <h4 style={styles.simpleName}>{cand.name}</h4>
-                      <p style={styles.simpleTitle}>{cand.title}</p>
+            ) : allCandidates.length > 0 ? (
+              <div className="ats-board-wrapper">
+                <div className="ats-board">
+                  {/* Column 1: Discovered */}
+                  <div className="ats-column">
+                    <div className="ats-column-header">
+                      <span>Discovered</span>
+                      <span className="ats-column-count">{discovered.length}</span>
                     </div>
-                    <span className="badge badge-purple">{cand.career_path.replace('_', ' ')}</span>
+                    <div className="ats-cards-list">
+                      {discovered.length > 0 
+                        ? sortCandidates(discovered).map(renderATSCard) 
+                        : renderEmptyColumn("No discovered matches")}
+                    </div>
                   </div>
-                  <p style={styles.simpleSummary}>{cand.summary}</p>
-                  <div style={styles.simpleSkills}>
-                    {cand.skills.slice(0, 6).map((skill, i) => (
-                      <span key={i} className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>
-                        {skill}
-                      </span>
-                    ))}
+
+                  {/* Column 2: Shortlisted */}
+                  <div className="ats-column">
+                    <div className="ats-column-header">
+                      <span>Shortlisted</span>
+                      <span className="ats-column-count">{shortlisted.length}</span>
+                    </div>
+                    <div className="ats-cards-list">
+                      {shortlisted.length > 0 
+                        ? shortlisted.map(renderATSCard) 
+                        : renderEmptyColumn("Drop candidates here")}
+                    </div>
+                  </div>
+
+                  {/* Column 3: Interviewing */}
+                  <div className="ats-column">
+                    <div className="ats-column-header">
+                      <span>Interviewing</span>
+                      <span className="ats-column-count">{interviewing.length}</span>
+                    </div>
+                    <div className="ats-cards-list">
+                      {interviewing.length > 0 
+                        ? interviewing.map(renderATSCard) 
+                        : renderEmptyColumn("Schedule interviews")}
+                    </div>
+                  </div>
+
+                  {/* Column 4: Hired */}
+                  <div className="ats-column">
+                    <div className="ats-column-header">
+                      <span>Hired</span>
+                      <span className="ats-column-count">{hired.length}</span>
+                    </div>
+                    <div className="ats-cards-list">
+                      {hired.length > 0 
+                        ? hired.map(renderATSCard) 
+                        : renderEmptyColumn("Ready to offer")}
+                    </div>
                   </div>
                 </div>
-              ))
+              </div>
             ) : (
-              <div style={styles.emptyBox}>
-                <p>No candidates available in the pool yet. Candidates must register and build profiles to be discovered.</p>
+              <div className="glass-panel" style={{ ...styles.emptyBox, display: 'flex', flexDirection: 'column', gap: '1.25rem', alignItems: 'center', justifyContent: 'center', padding: '3rem 2rem', textAlign: 'center' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', maxWidth: '500px', margin: 0, lineHeight: 1.5 }}>
+                  No candidates available in the pool yet. Candidates must register and build profiles to be discovered.
+                </p>
               </div>
             )}
           </div>
@@ -306,36 +531,5 @@ const styles = {
     color: 'var(--text-muted)',
     fontSize: '0.85rem',
     padding: '3rem 0',
-  },
-  simpleCard: {
-    padding: '1rem 1.25rem',
-    marginBottom: '0.75rem',
-  },
-  simpleHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '0.4rem',
-  },
-  simpleName: {
-    fontSize: '1rem',
-    color: 'var(--text-primary)',
-    fontWeight: '600',
-  },
-  simpleTitle: {
-    fontSize: '0.78rem',
-    color: 'var(--text-secondary)',
-  },
-  simpleSummary: {
-    fontSize: '0.82rem',
-    color: 'var(--text-secondary)',
-    marginBottom: '0.6rem',
-    lineHeight: '1.5',
-  },
-  simpleSkills: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '0.3rem',
   }
 };
-// Font import is handled in index.css

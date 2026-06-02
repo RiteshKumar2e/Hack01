@@ -93,3 +93,4 @@ export async function clearCandidates() {
   }
   return response.json();
 }
+

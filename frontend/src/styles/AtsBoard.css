@@ -1,0 +1,211 @@
+/* ATS Board Container */
+.ats-board-wrapper {
+  margin-top: 1.5rem;
+}
+
+.ats-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  align-items: start;
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .ats-board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .ats-board {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ATS Columns */
+.ats-column {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 480px;
+  transition: var(--transition-smooth);
+}
+
+.ats-column:hover {
+  border-color: var(--border-medium);
+}
+
+.ats-column-header {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-medium);
+  padding-bottom: 0.45rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ats-column-count {
+  background-color: var(--border-light);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.ats-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+.ats-empty-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border-light);
+  border-radius: 6px;
+  padding: 1.5rem 0.75rem;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ATS Candidate Card */
+.ats-candidate-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 0.75rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: var(--transition-smooth);
+}
+
+.ats-candidate-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-medium);
+  transform: translateY(-2px);
+}
+
+.ats-candidate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.ats-candidate-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.ats-candidate-name:hover {
+  color: var(--accent-primary);
+  text-decoration: underline;
+}
+
+.ats-candidate-score {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--accent-dark);
+  background-color: var(--accent-bg);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: inset 0 0 0 1px rgba(201, 146, 10, 0.2);
+}
+
+.ats-candidate-title {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ats-candidate-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.1rem;
+}
+
+.ats-skill-badge {
+  font-size: 0.62rem;
+  background-color: #f7f4eb;
+  color: var(--text-secondary);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  border: 1px solid var(--border-light);
+}
+
+/* ATS Actions */
+.ats-candidate-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.35rem;
+  border-top: 1px dashed var(--border-light);
+  padding-top: 0.4rem;
+  gap: 0.25rem;
+}
+
+.ats-action-btn {
+  background: none;
+  border: none;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  cursor: pointer;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  transition: var(--transition-smooth);
+  font-family: inherit;
+}
+
+.ats-action-btn:hover {
+  background-color: var(--accent-bg);
+  color: var(--accent-dark);
+}
+
+.ats-action-btn.reject {
+  color: var(--color-danger);
+}
+
+.ats-action-btn.reject:hover {
+  background-color: var(--color-danger-bg);
+}
+
+.ats-hired-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-success);
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.35rem;
+  background-color: var(--color-success-bg);
+  border-radius: 4px;
+}
