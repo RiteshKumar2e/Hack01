@@ -264,8 +264,8 @@ export default function JobInput({ onSearch, loading }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!jobDescription || jobDescription.trim().length < 20) {
-      alert("Please enter a detailed job description (minimum 20 characters).");
+    if (!selectedJobId && !preferredSkills.trim() && !experienceMin && !experienceMax && !location.trim()) {
+      alert("Please select a job template or enter at least one search criterion (skills, experience, or location).");
       return;
     }
     
@@ -274,7 +274,7 @@ export default function JobInput({ onSearch, loading }) {
       : [];
 
     onSearch({
-      job_description: jobDescription,
+      job_description: jobDescription || " ",
       job_title: jobTitle,
       preferred_skills: skillsList,
       required_experience_min: experienceMin ? parseInt(experienceMin, 10) : null,
@@ -301,36 +301,16 @@ export default function JobInput({ onSearch, loading }) {
             style={styles.select}
           >
             <option value="">-- Choose a template --</option>
-            {sampleJobs.map(job => (
-              <option key={job.id} value={job.id}>{job.title} ({job.company})</option>
-            ))}
+            {sampleJobs.map(job => {
+              const label = job.title || '';
+              const displayLabel = label.length > 35 ? label.substring(0, 32) + '...' : label;
+              return (
+                <option key={job.id} value={job.id}>
+                  {displayLabel}
+                </option>
+              );
+            })}
           </select>
-        </div>
-
-        {/* Title */}
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Target Job Title</label>
-          <input
-            type="text"
-            className="text-input"
-            placeholder="e.g. Lead Deep Learning Specialist"
-            value={jobTitle}
-            onChange={(e) => setJobTitle(e.target.value)}
-          />
-        </div>
-
-        {/* Description */}
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Detailed Job Description *</label>
-          <textarea
-            className="text-input"
-            rows="7"
-            placeholder="Paste complete job requirements, context, responsibilities here..."
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-            style={styles.textarea}
-            required
-          />
         </div>
 
         {/* Preferred Skills */}
@@ -474,6 +454,9 @@ const styles = {
     backgroundPosition: 'right 0.6rem center',
     backgroundSize: '0.9rem',
     paddingRight: '2rem',
+    maxWidth: '100%',
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
   },
   textarea: {
     resize: 'vertical',

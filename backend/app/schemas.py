@@ -70,7 +70,7 @@ class RankedCandidate(BaseModel):
 
 class SearchRequest(BaseModel):
     """Request body for the ranking endpoint."""
-    job_description: str = Field(min_length=20, description="Full job description text")
+    job_description: str = Field(min_length=1, description="Full job description text")
     job_title: Optional[str] = None
     preferred_skills: Optional[list[str]] = None
     required_experience_min: Optional[int] = None
