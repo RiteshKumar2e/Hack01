@@ -173,6 +173,37 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 0 3px rgba(201, 146, 10, 0.12);
 }
 
+/* Password visibility toggle input wrapper */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrapper .text-input {
+  padding-right: 2.5rem;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0.65rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  transition: var(--transition-smooth);
+}
+
+.password-toggle-btn:hover {
+  color: var(--text-secondary);
+}
+
+
 /* Buttons */
 .btn {
   display: inline-flex;
