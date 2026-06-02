@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router, set_pipeline
 from .ml.pipeline import RankingPipeline
-from .data.generate_data import generate_candidates, generate_sample_jobs
+from .data.generate_data import generate_sample_jobs
 from .db import init_db, get_all_candidates, save_candidate, get_all_sample_jobs, save_sample_job
 
 # Configure logging
@@ -39,11 +39,8 @@ def load_or_generate_data():
     # Load candidates from database
     candidates_data = get_all_candidates()
     if not candidates_data:
-        logger.info("No candidates found in Turso database. Generating and seeding synthetic candidates...")
-        candidates_data = generate_candidates()
-        for cand in candidates_data:
-            save_candidate(cand)
-        logger.info(f"Seeded {len(candidates_data)} candidates to database.")
+        logger.info("No candidates found in Turso database.")
+        candidates_data = []
     else:
         logger.info(f"Loaded {len(candidates_data)} candidates from Turso database.")
 
